@@ -74,6 +74,20 @@ function appendApplication_(ss, record, msg, status) {
   return sheet.getLastRow();
 }
 
+/**
+ * Keeps the tab newest-application-first. Call this once, after the whole
+ * per-message loop in runIngest() has finished — row numbers cached in the
+ * reconcile index (see Reconcile.gs) are only valid for that one run, so
+ * sorting mid-loop would silently point advanceStatus_ at the wrong row.
+ */
+function sortApplicationsByDate_(ss) {
+  const sheet = ss.getSheetByName(CONFIG.TABS.APPLICATIONS);
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 3) return;
+  sheet.getRange(2, 1, lastRow - 1, COLUMNS.length)
+    .sort({ column: COL.date_applied + 1, ascending: false });
+}
+
 function appendReview_(ss, msg, raw, reason) {
   ss.getSheetByName(CONFIG.TABS.REVIEW).appendRow([
     msg.messageId,

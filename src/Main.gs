@@ -17,11 +17,18 @@ function setup() {
   Logger.log('Setup complete. Tabs, labels and trigger are in place.');
 }
 
-/** Hourly trigger. Removes any existing one first so re-running is safe. */
+/**
+ * Nightly trigger, fires once around CONFIG.TRIGGER_HOUR in the timezone set
+ * in appsscript.json. Removes any existing one first so re-running is safe.
+ */
 function installTrigger() {
   removeTriggers();
-  ScriptApp.newTrigger('runIngest').timeBased().everyHours(6).create();
-  Logger.log('Trigger installed: runIngest every 6 hours.');
+  ScriptApp.newTrigger('runIngest').timeBased()
+    .everyDays(1)
+    .atHour(CONFIG.TRIGGER_HOUR)
+    .nearMinute(0)
+    .create();
+  Logger.log('Trigger installed: runIngest nightly around ' + CONFIG.TRIGGER_HOUR + ':00.');
 }
 
 function removeTriggers() {
@@ -35,6 +42,9 @@ function removeTriggers() {
  *   write outcome -> mark processed -> label thread
  * A crash between steps means the message is retried, and the dedupe gate
  * in harvestMessages_ absorbs the duplicate. The reverse order would lose rows.
+ *
+ * sortApplicationsByDate_ only runs once, after the whole loop — row numbers
+ * cached in `index` during the loop would be invalidated by sorting mid-loop.
  */
 function runIngest() {
   const started = new Date();
@@ -89,6 +99,8 @@ function runIngest() {
         }
       }
     }
+
+    if (stats.appended > 0) sortApplicationsByDate_(ss);
 
     logRun_(ss, stats, started, '');
 

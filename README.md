@@ -98,7 +98,8 @@ Never put the key in `Config.gs`. It would end up in this repo.
 
 Run `setup()` once from the editor and grant the scopes it asks for. It
 creates the five tabs, applies the status dropdown and date formats, creates
-the Gmail labels and installs a 6-hourly trigger.
+the Gmail labels and installs a nightly trigger (`CONFIG.TRIGGER_HOUR`,
+default 2am in the timezone set in `appsscript.json`).
 
 **5. First real run**
 
@@ -144,7 +145,8 @@ deprecated eventually.
 
 - Apps Script caps execution at 6 minutes. `MAX_MESSAGES_PER_RUN` is 40; a
   large backlog drains across successive runs, which the dedupe gate makes
-  free.
+  free. With a nightly trigger that's 40/day — raise `MAX_MESSAGES_PER_RUN`
+  or `installTrigger()`'s frequency if your backlog needs to clear faster.
 - Gmail labels are thread-level, not message-level. `Apps/Logged` is
   cosmetic; the real idempotency marker is the message id set built from
   `_processed`, `Applications` and `Review`.

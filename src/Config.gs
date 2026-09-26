@@ -11,6 +11,11 @@
 const CONFIG = {
   SPREADSHEET_ID: '1ehcpulwIBo5gJt6R4rBdLQx6HE8-NZUHJa6ddTDq1R0',
 
+  // Local hour (0-23, in appsscript.json's timeZone) the nightly trigger
+  // fires around. Apps Script picks a moment within that hour, not exactly
+  // on it.
+  TRIGGER_HOUR: 2,
+
   TABS: {
     APPLICATIONS: 'Applications',
     REVIEW: 'Review',
