@@ -109,6 +109,8 @@ Review than steady state — that is the threshold doing its job.
 
 ## Deploying with clasp
 
+`clasp` requires Node **v20+** — check with `node --version` before installing.
+
 ```bash
 npm install -g @google/clasp
 clasp login
@@ -117,6 +119,11 @@ clasp push
 ```
 
 `.clasp.json` is gitignored because `scriptId` is account-specific.
+
+Day to day, once that's set up: edit a file in `src/`, then `npm run deploy`
+(same as `clasp push`) to make it live. Apps Script isn't compiled or
+restarted — the next time any function runs (a manual click, or the nightly
+trigger), it just uses whatever's currently pushed.
 
 ## Cost
 
@@ -158,7 +165,7 @@ See `docs/SCHEMA.md` for the column layout and the status model.
 ## Tests
 
 ```bash
-node test/run.js
+npm test   # same as: node test/run.js
 ```
 
 Covers the normalization and reconcile-key logic, seeded with the company,

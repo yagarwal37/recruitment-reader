@@ -1,0 +1,8 @@
+{
+  "name": "recruitment-tracker",
+  "private": true,
+  "scripts": {
+    "test": "node test/run.js",
+    "deploy": "clasp push"
+  }
+}
