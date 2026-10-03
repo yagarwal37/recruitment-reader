@@ -5,7 +5,8 @@
 | Tab | Written by | Purpose |
 |---|---|---|
 | `Applications` | script only | the record of truth |
-| `Review` | script, resolved by human | anything the validator rejected |
+| `Review` | script, resolved by human | anything the validator rejected — genuine ambiguity |
+| `Ignored` | script | recruiter outreach / newsletters / etc — categorized cleanly, just not an application |
 | `Errors` | script | messages that threw, with an attempt counter |
 | `_processed` | script | every message id the pipeline has resolved |
 | `_runs` | script | one row per run, for spotting silent failures |

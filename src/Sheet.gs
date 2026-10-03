@@ -15,8 +15,8 @@
 /* ------------------------------------------------------------------ */
 
 /**
- * The union of every message id the pipeline has ever resolved. Reads three
- * tabs because Applications is written before _processed — a crash between
+ * The union of every message id the pipeline has ever resolved. Reads every
+ * outcome tab because each is written before _processed — a crash between
  * the two would otherwise reprocess a message that already has a row.
  */
 function loadSeenIds_(ss) {
@@ -24,6 +24,7 @@ function loadSeenIds_(ss) {
   collectColumn_(ss, CONFIG.TABS.PROCESSED, 1, seen);
   collectColumn_(ss, CONFIG.TABS.APPLICATIONS, COL.message_id + 1, seen);
   collectColumn_(ss, CONFIG.TABS.REVIEW, 1, seen);
+  collectColumn_(ss, CONFIG.TABS.IGNORED, 1, seen);
   return seen;
 }
 
@@ -99,6 +100,24 @@ function appendReview_(ss, msg, raw, reason) {
     msg.permalink,
     JSON.stringify(raw || {}).slice(0, 4000),
     ''
+  ]);
+}
+
+/**
+ * For categories that never touch Applications (recruiter_outreach, other).
+ * These already passed validate_ cleanly — the model wasn't unsure about
+ * anything — so they don't belong in Review, which is for genuine ambiguity.
+ */
+function appendIgnored_(ss, msg, record) {
+  ss.getSheetByName(CONFIG.TABS.IGNORED).appendRow([
+    msg.messageId,
+    msg.receivedAt,
+    record.category,
+    record.company,
+    record.title,
+    msg.subject,
+    msg.from,
+    msg.permalink
   ]);
 }
 

@@ -118,9 +118,11 @@ function runIngest() {
 function applyRecord_(ss, record, msg, index) {
   const targetStatus = CATEGORY_TO_STATUS[record.category];
 
-  // recruiter_outreach and other never touch the tab of record.
+  // recruiter_outreach and other never touch the tab of record. They already
+  // passed validate_ cleanly, so they go to Ignored, not Review — Review is
+  // for the model being unsure, not for "this was never an application."
   if (targetStatus === null) {
-    appendReview_(ss, msg, record, 'category=' + record.category);
+    appendIgnored_(ss, msg, record);
     return { action: 'ignore', row: null };
   }
 

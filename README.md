@@ -97,7 +97,7 @@ Never put the key in `Config.gs`. It would end up in this repo.
 **4. Run setup**
 
 Run `setup()` once from the editor and grant the scopes it asks for. It
-creates the five tabs, applies the status dropdown and date formats, creates
+creates the six tabs, applies the status dropdown and date formats, creates
 the Gmail labels and installs a nightly trigger (`CONFIG.TRIGGER_HOUR`,
 default 2am in the timezone set in `appsscript.json`).
 
@@ -144,7 +144,8 @@ deprecated eventually.
 - `Errors` has an attempt counter. After `MAX_ATTEMPTS` a message is marked
   processed so it stops burning budget; the row stays for inspection.
 - `Review` is meant to be non-empty. Ambiguous emails belong there, not in
-  the tab of record.
+  the tab of record. `Ignored` is separate — recruiter outreach and
+  newsletters the model categorized confidently, just not an application.
 - `listStaleApplications()` lists rows still `applied` with no update in 45
   days.
 
@@ -156,7 +157,7 @@ deprecated eventually.
   or `installTrigger()`'s frequency if your backlog needs to clear faster.
 - Gmail labels are thread-level, not message-level. `Apps/Logged` is
   cosmetic; the real idempotency marker is the message id set built from
-  `_processed`, `Applications` and `Review`.
+  `_processed`, `Applications`, `Review` and `Ignored`.
 - The script is the only writer to `Applications`. Anything else that wants
   to change a row should write to `Review` and let the next run promote it.
 

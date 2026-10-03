@@ -19,6 +19,7 @@ const CONFIG = {
   TABS: {
     APPLICATIONS: 'Applications',
     REVIEW: 'Review',
+    IGNORED: 'Ignored',
     ERRORS: 'Errors',
     PROCESSED: '_processed',
     RUNS: '_runs'

@@ -10,6 +10,10 @@ const REVIEW_HEADERS = [
   'message_id', 'received_at', 'reason', 'confidence', 'subject',
   'sender', 'source_email', 'raw_json', 'resolution'
 ];
+const IGNORED_HEADERS = [
+  'message_id', 'received_at', 'category', 'company', 'title',
+  'subject', 'sender', 'source_email'
+];
 const ERROR_HEADERS = ['message_id', 'first_seen', 'last_seen', 'attempts', 'subject', 'error'];
 const PROCESSED_HEADERS = ['message_id', 'processed_at', 'outcome'];
 const RUN_HEADERS = [
@@ -20,6 +24,7 @@ const RUN_HEADERS = [
 function ensureTabs_(ss) {
   ensureSheet_(ss, CONFIG.TABS.APPLICATIONS, COLUMNS);
   ensureSheet_(ss, CONFIG.TABS.REVIEW, REVIEW_HEADERS);
+  ensureSheet_(ss, CONFIG.TABS.IGNORED, IGNORED_HEADERS);
   ensureSheet_(ss, CONFIG.TABS.ERRORS, ERROR_HEADERS);
   ensureSheet_(ss, CONFIG.TABS.PROCESSED, PROCESSED_HEADERS);
   ensureSheet_(ss, CONFIG.TABS.RUNS, RUN_HEADERS);
