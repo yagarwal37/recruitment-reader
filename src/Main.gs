@@ -88,6 +88,7 @@ function runIngest() {
 
         if (outcome.action === 'append') stats.appended++;
         else if (outcome.action === 'update') stats.updated++;
+        else if (outcome.action === 'review') stats.review++;
         else stats.ignored++;
 
       } catch (err) {
@@ -100,7 +101,8 @@ function runIngest() {
       }
     }
 
-    if (stats.appended > 0) sortApplicationsByDate_(ss);
+    // Not just on append: fillBlanks_ can move an existing row's date_applied.
+    sortApplicationsByDate_(ss);
 
     logRun_(ss, stats, started, '');
 
@@ -113,7 +115,7 @@ function runIngest() {
 
 /**
  * Routes a validated record to the sheet. Returns { action, row }.
- * action is one of: append, update, ignore.
+ * action is one of: append, update, ignore, review.
  */
 function applyRecord_(ss, record, msg, index) {
   const targetStatus = CATEGORY_TO_STATUS[record.category];
@@ -126,16 +128,27 @@ function applyRecord_(ss, record, msg, index) {
     return { action: 'ignore', row: null };
   }
 
-  const match = findMatch_(record, index);
+  const match = findMatch_(record, index, msg.receivedAt);
 
   if (match === null) {
     const row = appendApplication_(ss, record, msg, targetStatus);
-    registerInIndex_(index, record, row);
+    registerInIndex_(index, record, row, targetStatus, msg.receivedAt);
     return { action: 'append', row: row };
   }
 
-  const changed = advanceStatus_(ss, match.row, targetStatus, msg);
-  return { action: changed ? 'update' : 'ignore', row: match.row };
+  // Several rows at this company could be the one this email is about, and it
+  // names no title or req id to tell them apart.
+  if (match.ambiguous) {
+    appendReview_(ss, msg, record,
+      'ambiguous: ' + match.ambiguous + ' ' + record.company + ' rows could match');
+    return { action: 'review', row: null };
+  }
+
+  const entry = match.entry;
+  fillBlanks_(ss, entry.row, record, msg);
+  const changed = advanceStatus_(ss, entry.row, targetStatus, msg);
+  refreshInIndex_(index, entry, record, changed ? targetStatus : entry.status, msg.receivedAt);
+  return { action: changed ? 'update' : 'ignore', row: entry.row };
 }
 
 function notifyFailure_(err) {

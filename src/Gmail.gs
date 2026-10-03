@@ -10,10 +10,15 @@
  * idempotency marker is the per-message id set in loadSeenIds_().
  */
 
+/**
+ * Returns up to `limit` unseen messages, oldest first. Gmail search returns
+ * newest first, which would process a rejection before the confirmation it
+ * follows and leave the confirmation nothing to attach to.
+ */
 function harvestMessages_(seenIds, limit) {
   const query = 'label:' + CONFIG.GMAIL.INBOUND_LABEL + ' ' + CONFIG.GMAIL.SEARCH_WINDOW;
   const threads = GmailApp.search(query, 0, CONFIG.GMAIL.MAX_THREADS_PER_RUN);
-  const out = [];
+  const pending = [];
 
   for (var t = 0; t < threads.length; t++) {
     const thread = threads[t];
@@ -21,11 +26,14 @@ function harvestMessages_(seenIds, limit) {
     for (var m = 0; m < messages.length; m++) {
       const message = messages[m];
       if (seenIds[message.getId()]) continue;
-      out.push(prepareMessage_(message, thread));
-      if (out.length >= limit) return out;
+      pending.push({ message: message, thread: thread, date: message.getDate() });
     }
   }
-  return out;
+
+  pending.sort(function (a, b) { return a.date - b.date; });
+  return pending.slice(0, limit).map(function (p) {
+    return prepareMessage_(p.message, p.thread);
+  });
 }
 
 /** Splits a raw Gmail message into the trusted metadata the pipeline needs. */
@@ -90,7 +98,7 @@ function atsVendorForDomain_(domain) {
   if (!domain) return '';
   var best = '';
   for (var key in ATS_DOMAINS) {
-    if (domain === key || domain.indexOf('.' + key) === domain.length - key.length - 1) {
+    if (domain === key || domain.slice(-(key.length + 1)) === '.' + key) {
       if (key.length > best.length) best = key;
     }
   }

@@ -9,7 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
-const src = ['Config', 'Aliases', 'Normalize', 'Reconcile']
+const src = ['Config', 'Aliases', 'Normalize', 'Reconcile', 'Gmail']
   .map(f => fs.readFileSync(path.join(SRC, f + '.gs'), 'utf8'))
   .join('\n');
 eval(src);
@@ -53,6 +53,35 @@ eq(titleKey_('IXL','Software Engineer, New Grad'),'ixl|software engineer','fille
 eq(titleKey_('Cisco','Software Engineer I'),titleKey_('Cisco','Software Engineer 1'),'I == 1');
 eq(titleKey_('Nuro','Front-End Software Engineer, New Grad'),
    titleKey_('Nuro','Front-End Software Engineer'),'dupe rows collapse');
+
+// findMatch_ — the Nexthop case: the confirmation names no title, the rejection does
+const newIndex = () => ({ byReq: {}, byTitle: {}, byCompany: {} });
+const bare = { company: 'Nexthop AI', title: '', req_id: '' };
+const titled = { company: 'Nexthop AI', title: 'Software Engineer - New Grad', req_id: '' };
+const confirmedAt = new Date('2026-09-30T01:54:10Z');
+const rejectedAt = new Date('2026-09-30T18:53:12Z');
+
+let ix = newIndex();
+registerInIndex_(ix, bare, 7, 'applied', confirmedAt);
+eq(findMatch_(titled, ix, rejectedAt).entry.row, 7, 'rejection finds bare confirmation row');
+
+ix = newIndex();
+registerInIndex_(ix, titled, 6, 'rejected', rejectedAt);
+eq(findMatch_(bare, ix, confirmedAt).entry.row, 6, 'earlier confirmation folds into rejected row');
+eq(findMatch_(bare, ix, new Date('2026-11-01')), null, 'confirmation after rejection is a new application');
+
+ix = newIndex();
+registerInIndex_(ix, { company: 'Cisco', title: 'Software Engineer I', req_id: '2007003' }, 2, 'applied', confirmedAt);
+eq(findMatch_({ company: 'Cisco', title: 'Software Engineer Data/AI', req_id: '2000073' }, ix, rejectedAt),
+   null, 'different jobs at one company stay separate');
+registerInIndex_(ix, { company: 'Cisco', title: 'Software Engineer Data/AI', req_id: '2000073' }, 3, 'applied', confirmedAt);
+eq(findMatch_({ company: 'Cisco', title: '', req_id: '' }, ix, rejectedAt).ambiguous, 2,
+   'bare email with two open rows is ambiguous');
+
+// ATS vendor — a same-length table key must not match
+eq(atsVendorForDomain_('us.greenhouse-mail.io'), 'greenhouse', 'greenhouse-mail subdomain');
+eq(atsVendorForDomain_('myworkday.com'), 'workday', 'workday exact');
+eq(atsVendorForDomain_('notifications.example.com'), '', 'unknown domain');
 
 
 let failed = 0;

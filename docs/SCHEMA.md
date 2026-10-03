@@ -5,7 +5,7 @@
 | Tab | Written by | Purpose |
 |---|---|---|
 | `Applications` | script only | the record of truth |
-| `Review` | script, resolved by human | anything the validator rejected — genuine ambiguity |
+| `Review` | script, resolved by human | anything the validator rejected, or an email that could match several rows — genuine ambiguity |
 | `Ignored` | script | recruiter outreach / newsletters / etc — categorized cleanly, just not an application |
 | `Errors` | script | messages that threw, with an attempt counter |
 | `_processed` | script | every message id the pipeline has resolved |
@@ -66,6 +66,15 @@ updates the manual row rather than creating a duplicate.
 
 1. `normalize(company) + "|" + normalize(req_id)` — exact
 2. `normalize(company) + "|" + normalize(title)` — fallback
+3. `normalize(company)` alone — only when the email or the row has neither a
+   req id nor a title, which is common for "we received your application"
+   emails. One candidate row matches; several go to `Review`. A `rejected` or
+   `withdrawn` row only matches emails older than it, so a confirmation after
+   a rejection is a new application.
+
+On a match, the row's empty cells are filled from the email and
+`date_applied` moves back if the email is older. Emails are processed oldest
+first, so a confirmation always lands before the rejection that follows it.
 
 `normKey_` strips punctuation and the filler that varies between postings of
 the same role: `new grad`, `early career`, `entry level`, `university`,
