@@ -54,27 +54,69 @@ order (that's still `Main.gs`'s `runIngest()`).
 
 ## Setup
 
-**1. Gmail filter**
+**1. Gmail filters**
 
-Create one filter in the Gmail UI that applies the label `Apps/Inbound`.
-Match on sender domains:
+Create two filters in the Gmail UI (Settings → Filters → Create a new
+filter), both applying the label `Apps/Inbound`. They're split because one
+combined query exceeds Gmail's filter length limit. Don't put sender domains
+in the *From* box and phrases in the *Subject* box of the same filter — Gmail
+ANDs those fields, so an email would need to match both.
 
-```
-from:(greenhouse.io OR myworkday.com OR myworkdayjobs.com OR lever.co OR
-ashbyhq.com OR icims.com OR smartrecruiters.com OR avature.net OR
-eightfold.ai OR oraclecloud.com OR jobvite.com OR successfactors.com OR
-brassring.com OR recsolu.com)
-```
-
-Add subject patterns for anything those miss:
+*Filter A — ATS senders.* Has the words:
 
 ```
-subject:("thank you for applying" OR "application received" OR
-"your application" OR "we received your application")
+from:(greenhouse-mail.io OR greenhouse.io OR myworkday.com OR
+myworkdayjobs.com OR lever.co OR ashbyhq.com OR icims.com OR
+smartrecruiters.com OR avature.net OR eightfold.ai OR oraclecloud.com OR
+taleo.net OR jobvite.com OR successfactors.com OR brassring.com OR
+recsolu.com OR workablemail.com OR bamboohr.com OR jazzhr.com OR breezy.hr OR
+rippling.com OR dover.com OR hackerrank.com OR codesignal.com OR
+hirevue.com OR codility.com)
 ```
 
-The filter does the coarse routing. Keeping the search surface small is what
-makes each run cheap.
+Doesn't have:
+
+```
+subject:("security code" OR "verification code" OR "confirm your identity"
+OR "complete your application" OR incomplete OR "new job opportunities" OR
+"jobs you may be interested in" OR "is hiring")
+```
+
+Greenhouse sends from `us.greenhouse-mail.io`, which `greenhouse.io` does
+not match — keep both.
+
+*Filter B — subject phrases, any sender.* Catches companies that mail from
+their own domain (Stripe, Coinbase, Oracle, IBM, Amazon, Amex), LinkedIn
+Easy Apply receipts, and recruiters writing directly. Subject:
+
+```
+("thank you for applying" OR "thanks for applying" OR "application received"
+OR "your application" OR "received your application" OR
+"thank you for your application" OR "thank you for your interest" OR
+"application status" OR "application update" OR "update re" OR interview OR
+"intro call" OR "phone screen" OR "next steps" OR assessment OR
+"coding challenge" OR "offer letter")
+```
+
+Doesn't have:
+
+```
+subject:("security code" OR "verification code" OR "confirm your identity"
+OR "complete your application" OR incomplete OR "new job opportunities" OR
+"jobs you may be interested in" OR "is hiring" OR "interview prep" OR
+"interview preparation") OR from:(jobalerts-noreply@linkedin.com OR
+editors-noreply@linkedin.com OR redditmail.com OR joinleland.com OR
+luma-mail.com OR interviewkickstart.com OR jobscan.co OR substack.com OR
+tldrnewsletter.com OR builtin.com OR dhs.gov)
+```
+
+Before saving either filter, paste its query into the Gmail search bar to
+preview what it catches. Tick "Also apply filter to matching conversations"
+to label mail that already arrived.
+
+The filters do the coarse routing. Keeping the search surface small is what
+makes each run cheap; anything that slips through and isn't an application
+lands in `Ignored`.
 
 **2. Apps Script project**
 
